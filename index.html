@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>川の淡水魚探しゲーム</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:sans-serif;
+    text-align:center;
+    background:#87ceeb;
+}
+
+h1{
+    margin:10px;
+}
+
+#river{
+    width:100%;
+    height:70vh;
+    background:linear-gradient(#3daee9,#1e88c7);
+    position:relative;
+    cursor:pointer;
+    overflow:hidden;
+}
+
+.bubble{
+    position:absolute;
+    width:10px;
+    height:10px;
+    background:white;
+    border-radius:50%;
+    opacity:0.8;
+    animation:bubble 1s ease-out forwards;
+}
+
+@keyframes bubble{
+    from{transform:translateY(0); opacity:1;}
+    to{transform:translateY(-50px); opacity:0;}
+}
+
+#result{
+    margin-top:20px;
+    font-size:24px;
+}
+
+.common{color:#ffffff;}
+.uncommon{color:#7CFF7C;}
+.rare{color:#66ccff;}
+.super{color:#ffd700;}
+.legend{color:#ff5c5c;}
+
+</style>
+</head>
+
+<body>
+
+<h1>🐟 川の淡水魚探し</h1>
+<p>川の好きな場所をタップ！魚が見つかるかも！</p>
+
+<div id="river"></div>
+
+<div id="result">魚を探そう！</div>
+
+<script>
+
+const fishes = [
+
+{name:"オイカワ", rarity:"N", rate:30, class:"common"},
+{name:"フナ", rarity:"N", rate:25, class:"common"},
+{name:"ウグイ", rarity:"N", rate:20, class:"common"},
+{name:"コイ", rarity:"R", rate:12, class:"uncommon"},
+{name:"ナマズ", rarity:"SR", rate:7, class:"rare"},
+{name:"アユ", rarity:"SR", rate:4, class:"super"},
+{name:"イトウ", rarity:"SSR", rate:2, class:"legend"}
+
+];
+
+const river = document.getElementById("river");
+
+river.addEventListener("click", function(e){
+
+    let x = e.offsetX;
+    let y = e.offsetY;
+
+    spawnBubble(x,y);
+    let fish = getFish();
+
+    document.getElementById("result").innerHTML =
+    `<span class="${fish.class}">🐟 ${fish.name} 発見！【${fish.rarity}】</span>`;
+
+});
+
+function spawnBubble(x,y){
+
+    for(let i=0;i<6;i++){
+
+        let bubble=document.createElement("div");
+        bubble.className="bubble";
+
+        bubble.style.left=(x+(Math.random()*30-15))+"px";
+        bubble.style.top=(y+(Math.random()*30-15))+"px";
+
+        river.appendChild(bubble);
+
+        setTimeout(()=>bubble.remove(),1000);
+
+    }
+}
+
+function getFish(){
+
+    let rand=Math.random()*100;
+    let total=0;
+
+    for(let f of fishes){
+
+        total+=f.rate;
+
+        if(rand<=total){
+            return f;
+        }
+
+    }
+}
+
+</script>
+
+</body>
+</html>
