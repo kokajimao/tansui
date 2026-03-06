@@ -2,54 +2,63 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>川の淡水魚探しゲーム</title>
+<title>川の魚探しゲーム</title>
 
 <style>
 
 body{
-    margin:0;
-    font-family:sans-serif;
-    text-align:center;
-    background:#87ceeb;
+margin:0;
+font-family:sans-serif;
+text-align:center;
+background:#87ceeb;
 }
 
 h1{
-    margin:10px;
+margin:10px;
+}
+
+#score{
+font-size:20px;
+margin-bottom:10px;
 }
 
 #river{
-    width:100%;
-    height:70vh;
-    background:linear-gradient(#3daee9,#1e88c7);
-    position:relative;
-    cursor:pointer;
-    overflow:hidden;
+width:100%;
+height:65vh;
+background:linear-gradient(#3daee9,#1e88c7);
+position:relative;
+cursor:pointer;
+overflow:hidden;
 }
 
 .bubble{
-    position:absolute;
-    width:10px;
-    height:10px;
-    background:white;
-    border-radius:50%;
-    opacity:0.8;
-    animation:bubble 1s ease-out forwards;
+position:absolute;
+width:10px;
+height:10px;
+background:white;
+border-radius:50%;
+animation:bubble 1s forwards;
 }
 
 @keyframes bubble{
-    from{transform:translateY(0); opacity:1;}
-    to{transform:translateY(-50px); opacity:0;}
+from{transform:translateY(0);opacity:1;}
+to{transform:translateY(-50px);opacity:0;}
 }
 
 #result{
-    margin-top:20px;
-    font-size:24px;
+margin-top:15px;
+font-size:22px;
 }
 
-.common{color:#ffffff;}
+#fishImage{
+font-size:60px;
+margin-top:10px;
+}
+
+.common{color:white;}
 .uncommon{color:#7CFF7C;}
 .rare{color:#66ccff;}
-.super{color:#ffd700;}
+.super{color:gold;}
 .legend{color:#ff5c5c;}
 
 </style>
@@ -57,24 +66,29 @@ h1{
 
 <body>
 
-<h1>🐟 川の淡水魚探し</h1>
-<p>川の好きな場所をタップ！魚が見つかるかも！</p>
+<h1>🐟 川の魚探し</h1>
+
+<div id="score">ポイント: 0</div>
+
+<p>川をタップして魚を見つけよう！</p>
 
 <div id="river"></div>
 
+<div id="fishImage"></div>
 <div id="result">魚を探そう！</div>
 
 <script>
 
+let score = 0;
+
 const fishes = [
 
-{name:"オイカワ", rarity:"N", rate:30, class:"common"},
-{name:"フナ", rarity:"N", rate:25, class:"common"},
-{name:"ウグイ", rarity:"N", rate:20, class:"common"},
-{name:"ブラックバス", rarity:"R", rate:12, class:"uncommon"},
-{name:"ナマズ", rarity:"SR", rate:7, class:"rare"},
-{name:"アユ", rarity:"SR", rate:4, class:"super"},
-{name:"イトウ", rarity:"SSR", rate:2, class:"legend"}
+{name:"オイカワ", emoji:"🐟", rarity:"N", rate:30, points:10, class:"common"},
+{name:"フナ", emoji:"🐟", rarity:"N", rate:25, points:10, class:"common"},
+{name:"コイ", emoji:"🐠", rarity:"R", rate:18, points:30, class:"uncommon"},
+{name:"ナマズ", emoji:"🐡", rarity:"SR", rate:12, points:60, class:"rare"},
+{name:"アユ", emoji:"🐟", rarity:"SR", rate:10, points:70, class:"super"},
+{name:"イトウ", emoji:"🦈", rarity:"SSR", rate:5, points:150, class:"legend"}
 
 ];
 
@@ -82,48 +96,62 @@ const river = document.getElementById("river");
 
 river.addEventListener("click", function(e){
 
-    let x = e.offsetX;
-    let y = e.offsetY;
+let x=e.offsetX;
+let y=e.offsetY;
 
-    spawnBubble(x,y);
-    let fish = getFish();
+spawnBubble(x,y);
 
-    document.getElementById("result").innerHTML =
-    `<span class="${fish.class}">🐟 ${fish.name} 発見！【${fish.rarity}】</span>`;
+let fish=getFish();
+
+score += fish.points;
+
+document.getElementById("score").innerText="ポイント: "+score;
+
+document.getElementById("fishImage").innerText=fish.emoji;
+
+document.getElementById("result").innerHTML=
+`<span class="${fish.class}">
+${fish.name} を捕まえた！<br>
+レア度【${fish.rarity}】<br>
++${fish.points}ポイント
+</span>`;
 
 });
 
 function spawnBubble(x,y){
 
-    for(let i=0;i<6;i++){
+for(let i=0;i<6;i++){
 
-        let bubble=document.createElement("div");
-        bubble.className="bubble";
+let bubble=document.createElement("div");
 
-        bubble.style.left=(x+(Math.random()*30-15))+"px";
-        bubble.style.top=(y+(Math.random()*30-15))+"px";
+bubble.className="bubble";
 
-        river.appendChild(bubble);
+bubble.style.left=(x+(Math.random()*40-20))+"px";
+bubble.style.top=(y+(Math.random()*40-20))+"px";
 
-        setTimeout(()=>bubble.remove(),1000);
+river.appendChild(bubble);
 
-    }
+setTimeout(()=>bubble.remove(),1000);
+
+}
+
 }
 
 function getFish(){
 
-    let rand=Math.random()*100;
-    let total=0;
+let rand=Math.random()*100;
+let total=0;
 
-    for(let f of fishes){
+for(let f of fishes){
 
-        total+=f.rate;
+total+=f.rate;
 
-        if(rand<=total){
-            return f;
-        }
+if(rand<=total){
+return f;
+}
 
-    }
+}
+
 }
 
 </script>
