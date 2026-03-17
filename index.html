@@ -10,12 +10,29 @@ body {
   background: linear-gradient(#87ceeb, #4da6ff);
 }
 #river {
-  width: 300px;
-  height: 200px;
+  width: 400px;
+  height: 250px;
   margin: 20px auto;
   background: #1e90ff;
   border-radius: 10px;
   position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.float {
+  width: 10px;
+  height: 10px;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+}
+.bubble {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  opacity: 0.8;
 }
 #log {
   margin-top: 20px;
@@ -25,17 +42,13 @@ body {
   background: #fff;
   padding: 10px;
 }
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-}
 </style>
 </head>
 <body>
 
 <h1>川釣りゲーム</h1>
+<p>川をクリック → ウキが沈んだ瞬間にスペース！</p>
 <div id="river"></div>
-<button onclick="fish()">釣る！</button>
 
 <h2>釣果</h2>
 <div id="log"></div>
@@ -48,7 +61,73 @@ const fishes = [
   { name: "イトウ", stars: 4, rate: 0.05 }
 ];
 
-function fish() {
+const river = document.getElementById("river");
+let floatEl = null;
+let bubbleEl = null;
+let isBiting = false;
+let canCatch = false;
+
+river.addEventListener("click", (e) => {
+  river.innerHTML = "";
+  isBiting = false;
+  canCatch = false;
+
+  const rect = river.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  // ウキ
+  floatEl = document.createElement("div");
+  floatEl.className = "float";
+  floatEl.style.left = x + "px";
+  floatEl.style.top = y + "px";
+  river.appendChild(floatEl);
+
+  // 泡（ランダム位置から移動）
+  bubbleEl = document.createElement("div");
+  bubbleEl.className = "bubble";
+  let bx = Math.random() * 380;
+  let by = Math.random() * 230;
+  bubbleEl.style.left = bx + "px";
+  bubbleEl.style.top = by + "px";
+  river.appendChild(bubbleEl);
+
+  const interval = setInterval(() => {
+    bx += (x - bx) * 0.05;
+    by += (y - by) * 0.05;
+    bubbleEl.style.left = bx + "px";
+    bubbleEl.style.top = by + "px";
+
+    // 近づいたらヒット準備
+    if (!isBiting && Math.hypot(bx - x, by - y) < 10) {
+      isBiting = true;
+
+      setTimeout(() => {
+        floatEl.style.top = (y + 10) + "px"; // 沈む
+        canCatch = true;
+
+        setTimeout(() => {
+          canCatch = false;
+        }, 800);
+      }, 500 + Math.random() * 1500);
+
+      clearInterval(interval);
+    }
+  }, 30);
+});
+
+// スペースキーで釣る
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    if (canCatch) {
+      catchFish();
+    } else {
+      addLog("タイミングが早すぎる！逃げられた…");
+    }
+  }
+});
+
+function catchFish() {
   const rand = Math.random();
   let sum = 0;
 
@@ -59,8 +138,6 @@ function fish() {
       return;
     }
   }
-
-  addLog("何も釣れなかった...");
 }
 
 function addLog(text) {
