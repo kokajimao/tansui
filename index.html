@@ -2,10 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>釣りゲーム</title>
+<title>釣りゲーム（修正版）</title>
 
 <style>
-
 body{
 margin:0;
 font-family:sans-serif;
@@ -74,13 +73,12 @@ margin-top:10px;
 .rare{color:#66ccff;}
 .super{color:gold;}
 .legend{color:#ff5c5c;}
-
 </style>
 </head>
 
 <body>
 
-<h1>🎣 釣りゲーム</h1>
+<h1>🎣 釣りゲーム（修正版）</h1>
 
 <div id="score">ポイント: 0</div>
 
@@ -119,17 +117,22 @@ function startFishing(){
 
 if(moving)return;
 
+let meter = document.getElementById("meter");
+let bar = document.getElementById("bar");
+
 moving=true;
 
 interval=setInterval(()=>{
 
-pos+=speed*direction;
+let max = meter.clientWidth - bar.clientWidth;
 
-if(pos>460 || pos<0){
-direction*=-1;
+pos += speed * direction;
+
+if(pos > max || pos < 0){
+direction *= -1;
 }
 
-document.getElementById("bar").style.left=pos+"px";
+bar.style.left = pos + "px";
 
 },20);
 
@@ -145,18 +148,18 @@ moving=false;
 let bar=document.getElementById("bar");
 let target=document.getElementById("target");
 
-let barPos=bar.offsetLeft;
-let targetPos=target.offsetLeft;
-let targetWidth=target.offsetWidth;
+// ★中心で判定（修正ポイント）
+let barCenter = bar.offsetLeft + bar.offsetWidth/2;
+let targetLeft = target.offsetLeft;
+let targetRight = targetLeft + target.offsetWidth;
 
-if(barPos>targetPos && barPos<targetPos+targetWidth){
+if(barCenter > targetLeft && barCenter < targetRight){
 
 let fish=getFish();
 
 score+=fish.points;
 
 document.getElementById("score").innerText="ポイント: "+score;
-
 document.getElementById("fishImage").innerText=fish.emoji;
 
 document.getElementById("result").innerHTML=
@@ -180,13 +183,10 @@ let rand=Math.random()*100;
 let total=0;
 
 for(let f of fishes){
-
 total+=f.rate;
-
 if(rand<=total){
 return f;
 }
-
 }
 
 }
