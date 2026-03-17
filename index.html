@@ -2,195 +2,73 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>釣りゲーム（修正版）</title>
-
+<title>川釣りゲーム</title>
 <style>
-body{
-margin:0;
-font-family:sans-serif;
-text-align:center;
-background:#87ceeb;
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background: linear-gradient(#87ceeb, #4da6ff);
 }
-
-h1{
-margin:10px;
+#river {
+  width: 300px;
+  height: 200px;
+  margin: 20px auto;
+  background: #1e90ff;
+  border-radius: 10px;
+  position: relative;
 }
-
-#score{
-font-size:20px;
-margin-bottom:10px;
+#log {
+  margin-top: 20px;
+  height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 10px;
 }
-
-#river{
-width:100%;
-height:40vh;
-background:linear-gradient(#3daee9,#1e88c7);
+button {
+  padding: 10px 20px;
+  font-size: 16px;
 }
-
-#meter{
-width:80%;
-height:30px;
-background:#ddd;
-margin:30px auto;
-position:relative;
-border-radius:20px;
-overflow:hidden;
-}
-
-#target{
-position:absolute;
-height:100%;
-width:80px;
-background:rgba(0,255,0,0.5);
-left:50%;
-transform:translateX(-50%);
-}
-
-#bar{
-position:absolute;
-height:100%;
-width:20px;
-background:red;
-left:0;
-}
-
-button{
-padding:12px 30px;
-font-size:18px;
-margin:10px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-}
-
-#fishImage{
-font-size:60px;
-margin-top:10px;
-}
-
-.common{color:white;}
-.uncommon{color:#7CFF7C;}
-.rare{color:#66ccff;}
-.super{color:gold;}
-.legend{color:#ff5c5c;}
 </style>
 </head>
-
 <body>
 
-<h1>🎣 釣りゲーム（修正版）</h1>
-
-<div id="score">ポイント: 0</div>
-
+<h1>川釣りゲーム</h1>
 <div id="river"></div>
+<button onclick="fish()">釣る！</button>
 
-<div id="meter">
-<div id="target"></div>
-<div id="bar"></div>
-</div>
-
-<button onclick="startFishing()">釣り開始</button>
-<button onclick="catchFish()">釣り上げる！</button>
-
-<div id="fishImage"></div>
-<div id="result">釣りを始めよう！</div>
+<h2>釣果</h2>
+<div id="log"></div>
 
 <script>
-
-let score=0;
-let pos=0;
-let speed=4;
-let moving=false;
-let direction=1;
-let interval;
-
-const fishes=[
-{name:"オイカワ",emoji:"🐟",rarity:"N",rate:35,points:10,class:"common"},
-{name:"フナ",emoji:"🐟",rarity:"N",rate:25,points:10,class:"common"},
-{name:"コイ",emoji:"🐠",rarity:"R",rate:18,points:30,class:"uncommon"},
-{name:"ナマズ",emoji:"🐡",rarity:"SR",rate:12,points:60,class:"rare"},
-{name:"アユ",emoji:"🐟",rarity:"SR",rate:7,points:70,class:"super"},
-{name:"イトウ",emoji:"🦈",rarity:"SSR",rate:3,points:150,class:"legend"}
+const fishes = [
+  { name: "フナ", stars: 1, rate: 0.5 },
+  { name: "コイ", stars: 2, rate: 0.3 },
+  { name: "ナマズ", stars: 3, rate: 0.15 },
+  { name: "イトウ", stars: 4, rate: 0.05 }
 ];
 
-function startFishing(){
+function fish() {
+  const rand = Math.random();
+  let sum = 0;
 
-if(moving)return;
+  for (let f of fishes) {
+    sum += f.rate;
+    if (rand < sum) {
+      addLog(`🎣 ${f.name}（★${f.stars}）を釣った！`);
+      return;
+    }
+  }
 
-let meter = document.getElementById("meter");
-let bar = document.getElementById("bar");
-
-moving=true;
-
-interval=setInterval(()=>{
-
-let max = meter.clientWidth - bar.clientWidth;
-
-pos += speed * direction;
-
-if(pos > max || pos < 0){
-direction *= -1;
+  addLog("何も釣れなかった...");
 }
 
-bar.style.left = pos + "px";
-
-},20);
-
+function addLog(text) {
+  const log = document.getElementById("log");
+  const p = document.createElement("p");
+  p.textContent = text;
+  log.prepend(p);
 }
-
-function catchFish(){
-
-if(!moving)return;
-
-clearInterval(interval);
-moving=false;
-
-let bar=document.getElementById("bar");
-let target=document.getElementById("target");
-
-// ★中心で判定（修正ポイント）
-let barCenter = bar.offsetLeft + bar.offsetWidth/2;
-let targetLeft = target.offsetLeft;
-let targetRight = targetLeft + target.offsetWidth;
-
-if(barCenter > targetLeft && barCenter < targetRight){
-
-let fish=getFish();
-
-score+=fish.points;
-
-document.getElementById("score").innerText="ポイント: "+score;
-document.getElementById("fishImage").innerText=fish.emoji;
-
-document.getElementById("result").innerHTML=
-`<span class="${fish.class}">
-${fish.name} が釣れた！<br>
-レア度【${fish.rarity}】<br>
-+${fish.points}ポイント
-</span>`;
-
-}else{
-
-document.getElementById("result").innerHTML="逃げられた…！";
-
-}
-
-}
-
-function getFish(){
-
-let rand=Math.random()*100;
-let total=0;
-
-for(let f of fishes){
-total+=f.rate;
-if(rand<=total){
-return f;
-}
-}
-
-}
-
 </script>
 
 </body>
