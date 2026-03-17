@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>川釣りゲーム</title>
+<title>リアル川釣りゲーム</title>
 <style>
 body {
   font-family: sans-serif;
@@ -10,29 +10,40 @@ body {
   background: linear-gradient(#87ceeb, #4da6ff);
 }
 #river {
-  width: 400px;
-  height: 250px;
+  width: 420px;
+  height: 260px;
   margin: 20px auto;
-  background: #1e90ff;
-  border-radius: 10px;
+  background: radial-gradient(circle at 50% 30%, #3aa0ff, #1e6fd9);
+  border-radius: 12px;
   position: relative;
   overflow: hidden;
-  cursor: pointer;
+  cursor: crosshair;
 }
 .float {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: red;
   border-radius: 50%;
   position: absolute;
+  transition: top 0.2s;
+}
+.ripple {
+  position: absolute;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 50%;
+  animation: ripple 1s ease-out;
+}
+@keyframes ripple {
+  from { width: 0; height: 0; opacity: 1; }
+  to { width: 60px; height: 60px; opacity: 0; }
 }
 .bubble {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: white;
   border-radius: 50%;
   position: absolute;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 #log {
   margin-top: 20px;
@@ -46,8 +57,8 @@ body {
 </head>
 <body>
 
-<h1>川釣りゲーム</h1>
-<p>川をクリック → ウキが沈んだ瞬間にスペース！</p>
+<h1>リアル川釣りゲーム</h1>
+<p>クリックで投げる → ウキが沈んだ瞬間にスペース！</p>
 <div id="river"></div>
 
 <h2>釣果</h2>
@@ -63,66 +74,93 @@ const fishes = [
 
 const river = document.getElementById("river");
 let floatEl = null;
-let bubbleEl = null;
-let isBiting = false;
 let canCatch = false;
+let active = false;
 
 river.addEventListener("click", (e) => {
   river.innerHTML = "";
-  isBiting = false;
+  active = true;
   canCatch = false;
 
   const rect = river.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  // ウキ
+  // ripple
+  const ripple = document.createElement("div");
+  ripple.className = "ripple";
+  ripple.style.left = (x - 30) + "px";
+  ripple.style.top = (y - 30) + "px";
+  river.appendChild(ripple);
+
+  // float
   floatEl = document.createElement("div");
   floatEl.className = "float";
   floatEl.style.left = x + "px";
   floatEl.style.top = y + "px";
   river.appendChild(floatEl);
 
-  // 泡（ランダム位置から移動）
-  bubbleEl = document.createElement("div");
-  bubbleEl.className = "bubble";
-  let bx = Math.random() * 380;
-  let by = Math.random() * 230;
-  bubbleEl.style.left = bx + "px";
-  bubbleEl.style.top = by + "px";
-  river.appendChild(bubbleEl);
+  // bubbles swarm
+  let bubbles = [];
+  for (let i = 0; i < 5; i++) {
+    const b = document.createElement("div");
+    b.className = "bubble";
+    b.x = Math.random() * 400;
+    b.y = Math.random() * 240;
+    b.style.left = b.x + "px";
+    b.style.top = b.y + "px";
+    river.appendChild(b);
+    bubbles.push(b);
+  }
 
-  const interval = setInterval(() => {
-    bx += (x - bx) * 0.05;
-    by += (y - by) * 0.05;
-    bubbleEl.style.left = bx + "px";
-    bubbleEl.style.top = by + "px";
+  let t = 0;
+  const move = setInterval(() => {
+    t++;
 
-    // 近づいたらヒット準備
-    if (!isBiting && Math.hypot(bx - x, by - y) < 10) {
-      isBiting = true;
+    bubbles.forEach(b => {
+      b.x += (x - b.x) * 0.03 + (Math.random() - 0.5) * 2;
+      b.y += (y - b.y) * 0.03 + (Math.random() - 0.5) * 2;
+      b.style.left = b.x + "px";
+      b.style.top = b.y + "px";
+    });
 
-      setTimeout(() => {
-        floatEl.style.top = (y + 10) + "px"; // 沈む
-        canCatch = true;
-
-        setTimeout(() => {
-          canCatch = false;
-        }, 800);
-      }, 500 + Math.random() * 1500);
-
-      clearInterval(interval);
+    // bite timing
+    if (t > 60 && t < 120 && Math.random() < 0.05) {
+      bite(x, y);
+      clearInterval(move);
     }
   }, 30);
 });
 
-// スペースキーで釣る
+function bite(x, y) {
+  if (!active) return;
+
+  // small fake nibble first
+  floatEl.style.top = (y + 4) + "px";
+
+  setTimeout(() => {
+    floatEl.style.top = (y + 14) + "px"; // deep sink
+    canCatch = true;
+
+    setTimeout(() => {
+      if (canCatch) {
+        addLog("…食い逃げされた！");
+        canCatch = false;
+      }
+    }, 700);
+  }, 400 + Math.random() * 800);
+}
+
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
+    if (!active) return;
+
     if (canCatch) {
       catchFish();
+      canCatch = false;
+      active = false;
     } else {
-      addLog("タイミングが早すぎる！逃げられた…");
+      addLog("早すぎ！タイミングが違う…");
     }
   }
 });
